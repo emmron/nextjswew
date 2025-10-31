@@ -1,6 +1,7 @@
 const Bet = require('../models/bet')
 const Event = require('../models/event')
 const Wallet = require('../models/wallet')
+const House = require('../models/house')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 module.exports = (expressApp) => {
@@ -41,7 +42,24 @@ module.exports = (expressApp) => {
     }
   })
 
-  // Place a bet
+  // Get maximum allowed bet for given odds
+  expressApp.get('/api/bets/max-bet/:odds', async (req, res) => {
+    try {
+      const odds = parseFloat(req.params.odds)
+      const maxBet = await House.calculateMaxBet(odds)
+      const houseBalance = await House.getBalance()
+
+      res.json({
+        maxBet,
+        houseBalance: houseBalance.balance,
+        message: `Maximum bet: $${maxBet} (House protects 10% max risk per bet)`
+      })
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  // Place a bet with risk management
   expressApp.post('/api/bets/place', async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' })
@@ -60,6 +78,31 @@ module.exports = (expressApp) => {
         return res.status(400).json({ error: 'Missing required fields' })
       }
 
+      const betAmount = parseFloat(amount)
+      const betOdds = parseFloat(odds)
+      const potentialWin = betAmount * betOdds
+
+      // CRITICAL: Check if house can afford to pay this bet if it wins
+      const maxBet = await House.calculateMaxBet(betOdds)
+      if (betAmount > maxBet) {
+        return res.status(400).json({
+          error: `Bet too large. Maximum bet for these odds is $${maxBet}`,
+          maxBet,
+          reason: 'House risk management - protecting bankroll'
+        })
+      }
+
+      // Check if house has enough to pay potential winnings
+      const house = await House.getBalance()
+      const potentialPayout = potentialWin
+      if (potentialPayout > house.balance * 0.5) {
+        return res.status(400).json({
+          error: 'Bet amount too high for current house bankroll',
+          maxSafeBet: Math.floor((house.balance * 0.5) / betOdds),
+          reason: 'Insufficient house funds to guarantee payout'
+        })
+      }
+
       // Verify event exists and is open for betting
       const event = await Event.findById(eventId)
       if (!event) {
@@ -70,8 +113,16 @@ module.exports = (expressApp) => {
         return res.status(400).json({ error: 'Event is not open for betting' })
       }
 
-      // Deduct funds from wallet
-      await Wallet.deductFunds(req.user.id, amount)
+      // Minimum bet check
+      if (betAmount < 5) {
+        return res.status(400).json({ error: 'Minimum bet is $5' })
+      }
+
+      // Deduct funds from user wallet
+      await Wallet.deductFunds(req.user.id, betAmount)
+
+      // Add funds to house (house receives the bet amount)
+      await House.receiveBet(betAmount)
 
       // Create bet
       const bet = await Bet.create({
@@ -80,14 +131,18 @@ module.exports = (expressApp) => {
         eventId,
         eventName: event.name,
         selection,
-        amount: parseFloat(amount),
-        odds: parseFloat(odds),
-        potentialWin: parseFloat(amount) * parseFloat(odds),
+        amount: betAmount,
+        odds: betOdds,
+        potentialWin,
         status: 'active',
         createdAt: new Date()
       })
 
-      res.json({ bet, message: 'Bet placed successfully' })
+      res.json({
+        bet,
+        message: 'Bet placed successfully',
+        houseBalance: (await House.getBalance()).balance
+      })
     } catch (error) {
       res.status(500).json({ error: error.message })
     }
@@ -261,17 +316,20 @@ module.exports = (expressApp) => {
       const userId = session.metadata.userId || session.client_reference_id
 
       if (session.metadata.type === 'membership') {
-        // Mark membership as paid
+        // Mark membership as paid and ADD TO HOUSE BANKROLL
         if (userId) {
+          const MEMBERSHIP_FEE = parseFloat(process.env.MEMBERSHIP_FEE || '10')
           const wallet = await Wallet.findByUserId(userId)
           await Wallet.db.update(
             { userId },
             { $set: { membershipPaid: true, membershipPaidAt: new Date() } },
             {}
           )
+          // CRITICAL: Add membership fee to house bankroll (pure profit!)
+          await House.addMembershipFee(MEMBERSHIP_FEE)
         }
       } else if (session.metadata.type === 'deposit') {
-        // Add funds to user's wallet
+        // Add funds to user's wallet (user money, not house profit)
         const amount = parseFloat(session.metadata.amount)
         if (userId && amount) {
           await Wallet.addFunds(userId, amount)
@@ -310,7 +368,7 @@ module.exports = (expressApp) => {
     }
   })
 
-  // Admin: Settle bets for an event
+  // Admin: Settle bets for an event with house bankroll management
   expressApp.post('/api/admin/events/:id/settle', async (req, res) => {
     if (!req.user || !req.user.admin) {
       return res.status(403).json({ error: 'Unauthorized' })
@@ -326,19 +384,70 @@ module.exports = (expressApp) => {
       // Get all bets for this event
       const bets = await Bet.findByEventId(eventId)
 
-      // Settle each bet
+      let totalPayout = 0
+      let winners = []
+      let losers = []
+
+      // Calculate total payout needed
       for (const bet of bets) {
         if (bet.selection === winner) {
-          // Winner - pay out
-          await Bet.settle(bet._id, 'won')
-          await Wallet.addFunds(bet.userId, bet.potentialWin)
+          totalPayout += bet.potentialWin
+          winners.push(bet)
         } else {
-          // Loser
-          await Bet.settle(bet._id, 'lost')
+          losers.push(bet)
         }
       }
 
-      res.json({ message: 'Bets settled successfully' })
+      // Check if house can afford payouts
+      const house = await House.getBalance()
+      if (totalPayout > house.balance) {
+        return res.status(400).json({
+          error: 'INSUFFICIENT HOUSE FUNDS',
+          houseBalance: house.balance,
+          requiredPayout: totalPayout,
+          shortfall: totalPayout - house.balance,
+          message: 'Cannot settle - house cannot afford to pay all winners. Add more funds or adjust bets.'
+        })
+      }
+
+      // Settle each bet
+      for (const bet of winners) {
+        // Winner - pay out from house
+        await Bet.settle(bet._id, 'won')
+        await Wallet.addFunds(bet.userId, bet.potentialWin)
+        await House.payout(bet.potentialWin)
+      }
+
+      for (const bet of losers) {
+        // Loser - house keeps the bet amount (already added when bet was placed)
+        await Bet.settle(bet._id, 'lost')
+      }
+
+      const finalHouse = await House.getBalance()
+
+      res.json({
+        message: 'Bets settled successfully',
+        winners: winners.length,
+        losers: losers.length,
+        totalPayout,
+        houseBalanceBefore: house.balance,
+        houseBalanceAfter: finalHouse.balance,
+        profit: finalHouse.profit
+      })
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  // Admin: Get house financial stats
+  expressApp.get('/api/admin/house/stats', async (req, res) => {
+    if (!req.user || !req.user.admin) {
+      return res.status(403).json({ error: 'Unauthorized' })
+    }
+
+    try {
+      const stats = await House.getStats()
+      res.json(stats)
     } catch (error) {
       res.status(500).json({ error: error.message })
     }

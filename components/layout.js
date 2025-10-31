@@ -230,6 +230,9 @@ export class AdminMenuItem extends React.Component {
     if (this.props.session.user && this.props.session.user.admin === true) {
       return (
         <React.Fragment>
+          <Link prefetch href="/admin-financials">
+            <a href="/admin-financials" className="dropdown-item"><span className="icon ion-ios-cash mr-1"></span> Financials</a>
+          </Link>
           <Link prefetch href="/admin-events">
             <a href="/admin-events" className="dropdown-item"><span className="icon ion-md-settings mr-1"></span> Manage Events</a>
           </Link>
