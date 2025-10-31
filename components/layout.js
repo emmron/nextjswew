@@ -55,42 +55,35 @@ export default class extends React.Component {
         <Head>
           <meta charSet="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
-          <title>{this.props.title || 'Next.js Starter Project'}</title>
+          <title>{this.props.title || 'SportsBet - Bet on Your Favorite Sports'}</title>
           <style dangerouslySetInnerHTML={{__html: Styles}}/>
           <script src="https://cdn.polyfill.io/v2/polyfill.min.js"/>
         </Head>
         <Navbar light className="navbar navbar-expand-md pt-3 pb-3">
           <Link prefetch href="/">
             <NavbarBrand href="/">
-              <span className="icon ion-md-home mr-1"></span> {Package.name}
+              <span className="icon ion-ios-trophy mr-1"></span> SportsBet
             </NavbarBrand>
           </Link>
           <input className="nojs-navbar-check" id="nojs-navbar-check" type="checkbox" aria-label="Menu"/>
           <label tabIndex="1" htmlFor="nojs-navbar-check" className="nojs-navbar-label mt-2" />
           <div className="nojs-navbar">
             <Nav navbar>
-              <div tabIndex="1" className="dropdown nojs-dropdown">
-                <div className="nav-item">
-                  <span className="dropdown-toggle nav-link">Examples</span>
-                </div>
-                <div className="dropdown-menu">
-                  <Link prefetch href="/examples/authentication">
-                    <a href="/examples/authentication" className="dropdown-item">Auth</a>
-                  </Link>
-                  <Link prefetch href="/examples/async">
-                    <a href="/examples/async" className="dropdown-item">Async Data</a>
-                  </Link>
-                  <Link prefetch href="/examples/layout">
-                    <a href="/examples/layout" className="dropdown-item">Layout</a>
-                  </Link>
-                  <Link prefetch href="/examples/routing">
-                    <a href="/examples/routing" className="dropdown-item">Routing</a>
-                  </Link>
-                  <Link prefetch href="/examples/styling">
-                    <a href="/examples/styling" className="dropdown-item">Styling</a>
-                  </Link>
-                </div>
-              </div>
+              <NavItem>
+                <Link prefetch href="/sports">
+                  <a href="/sports" className="nav-link"><span className="icon ion-ios-football mr-1"></span> Sports</a>
+                </Link>
+              </NavItem>
+              <NavItem>
+                <Link prefetch href="/my-bets">
+                  <a href="/my-bets" className="nav-link"><span className="icon ion-ios-list mr-1"></span> My Bets</a>
+                </Link>
+              </NavItem>
+              <NavItem>
+                <Link prefetch href="/wallet">
+                  <a href="/wallet" className="nav-link"><span className="icon ion-ios-wallet mr-1"></span> Wallet</a>
+                </Link>
+              </NavItem>
             </Nav>
             <UserMenu session={this.props.session} toggleModal={this.toggleModal} signinBtn={this.props.signinBtn}/>
           </div>
@@ -138,22 +131,19 @@ export class MainBody extends React.Component {
               {this.props.children}
             </Col>
             <Col xs="12" md="3" lg="2" style={{paddingTop: '1em'}}>
-              <h5 className="text-muted text-uppercase">Examples</h5>
+              <h5 className="text-muted text-uppercase">Menu</h5>
               <ListGroup>
                 <ListGroupItem>
-                  <Link prefetch href="/examples/authentication"><a href="/examples/authentication" className="d-block">Auth</a></Link>
+                  <Link prefetch href="/sports"><a href="/sports" className="d-block"><span className="icon ion-ios-football mr-1"></span> Sports</a></Link>
                 </ListGroupItem>
                 <ListGroupItem>
-                    <Link prefetch href="/examples/async"><a href="/examples/async" className="d-block">Async</a></Link>
+                    <Link prefetch href="/my-bets"><a href="/my-bets" className="d-block"><span className="icon ion-ios-list mr-1"></span> My Bets</a></Link>
                 </ListGroupItem>
                 <ListGroupItem>
-                  <Link prefetch href="/examples/layout"><a href="/examples/layout" className="d-block">Layout</a></Link>
+                  <Link prefetch href="/wallet"><a href="/wallet" className="d-block"><span className="icon ion-ios-wallet mr-1"></span> Wallet</a></Link>
                 </ListGroupItem>
                 <ListGroupItem>
-                  <Link prefetch href="/examples/routing"><a href="/examples/routing" className="d-block">Routing</a></Link>
-                </ListGroupItem>
-                <ListGroupItem>
-                    <Link prefetch href="/examples/styling"><a href="/examples/styling" className="d-block">Styling</a></Link>
+                  <Link prefetch href="/account"><a href="/account" className="d-block"><span className="icon ion-md-person mr-1"></span> Account</a></Link>
                 </ListGroupItem>
               </ListGroup>
             </Col>
@@ -240,6 +230,9 @@ export class AdminMenuItem extends React.Component {
     if (this.props.session.user && this.props.session.user.admin === true) {
       return (
         <React.Fragment>
+          <Link prefetch href="/admin-events">
+            <a href="/admin-events" className="dropdown-item"><span className="icon ion-md-settings mr-1"></span> Manage Events</a>
+          </Link>
           <Link prefetch href="/admin">
             <a href="/admin" className="dropdown-item"><span className="icon ion-md-settings mr-1"></span> Admin</a>
           </Link>

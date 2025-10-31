@@ -1,41 +1,85 @@
 import Link from 'next/link'
 import React from 'react'
-import { Container, Row, Col, Button, Jumbotron, ListGroup, ListGroupItem } from 'reactstrap'
+import Router from 'next/router'
+import { Container, Row, Col, Button, Jumbotron, Card, CardBody, CardTitle, CardText, Badge } from 'reactstrap'
 import Page from '../components/page'
 import Layout from '../components/layout'
 
 export default class extends Page {
+  constructor(props) {
+    super(props)
+    this.state = {
+      events: [],
+      loading: true
+    }
+  }
+
+  async componentDidMount() {
+    try {
+      const res = await fetch('/api/events')
+      const data = await res.json()
+      this.setState({
+        events: data.events ? data.events.slice(0, 6) : [],
+        loading: false
+      })
+    } catch (error) {
+      console.error('Error loading events:', error)
+      this.setState({ loading: false })
+    }
+  }
+
+  formatDate(dateString) {
+    const date = new Date(dateString)
+    return date.toLocaleString()
+  }
+
   render() {
+    const { events, loading } = this.state
+
     return (
-      <Layout {...this.props} navmenu={false} container={false}>
+      <Layout {...this.props} navmenu={true} container={false}>
         <Jumbotron className="text-light rounded-0" style={{
-          backgroundColor: 'rgba(73,155,234,1)',
-          background: 'radial-gradient(ellipse at center, rgba(73,155,234,1) 0%, rgba(32,124,229,1) 100%)',
+          backgroundColor: 'rgba(40,167,69,1)',
+          background: 'linear-gradient(135deg, rgba(40,167,69,1) 0%, rgba(25,135,84,1) 100%)',
           boxShadow: 'inset 0 0 100px rgba(0,0,0,0.1)'
           }}>
           <Container className="mt-2 mb-2">
-            <h1 className="display-2 mb-3" style={{fontWeight: 300}}>
-              <span style={{fontWeight: 600}}>
-                <span className="mr-3">▲</span>
-                <br className="v-block d-sm-none"/>
-                Next.js
-              </span>
-              <br className="v-block d-lg-none"/> Starter Project
+            <h1 className="display-2 mb-3" style={{fontWeight: 600}}>
+              <span className="icon ion-ios-trophy mr-3"></span>
+              SportsBet
             </h1>
-            <p className="lead mb-5">
-              A reference and template for React projects
+            <p className="lead mb-4">
+              Bet on your favorite sports. Win big.
             </p>
-            <p className="text-right">
-              <a href="https://github.com/iaincollins/nextjs-starter" className="btn btn-outline-light btn-lg"><span className="icon ion-logo-github mr-2"/> Download from GitHub</a>
+            <p>
+              {this.props.session.user ? (
+                <>
+                  <Button color="light" size="lg" className="mr-3" onClick={() => Router.push('/sports')}>
+                    <span className="icon ion-ios-football mr-2"></span> View All Events
+                  </Button>
+                  <Button color="outline-light" size="lg" onClick={() => Router.push('/wallet')}>
+                    <span className="icon ion-ios-wallet mr-2"></span> My Wallet
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button color="light" size="lg" className="mr-3" onClick={() => Router.push('/auth')}>
+                    <span className="icon ion-ios-log-in mr-2"></span> Sign In
+                  </Button>
+                  <Button color="outline-light" size="lg" onClick={() => Router.push('/auth')}>
+                    <span className="icon ion-ios-person-add mr-2"></span> Sign Up
+                  </Button>
+                </>
+              )}
             </p>
             <style jsx>{`
               .display-2  {
                 text-shadow: 0 5px 10px rgba(0,0,0,0.3);
-                color: rgba(255,255,255,0.9);
+                color: rgba(255,255,255,0.95);
               }
               .lead {
-                font-size: 3em;
-                opacity: 0.7;
+                font-size: 2em;
+                opacity: 0.9;
               }
               @media (max-width: 767px) {
                 .display-2 {
@@ -49,72 +93,81 @@ export default class extends Page {
             `}</style>
           </Container>
         </Jumbotron>
-        <Container>
-          <p className="text-muted small">
-            * This project is not associated with Next.js or Zeit.
-          </p>
-          <h2 className="text-center display-4 mt-5 mb-2">Features</h2>
-          <Row className="pb-5">
-            <Col xs="12" sm="4" className="pt-5">
-              <h3 className="text-center mb-4">Sessions / Security</h3>
-              <ListGroup>
-                <ListGroupItem><a className="text-dark" href="https://expressjs.com">Express</a></ListGroupItem>
-                <ListGroupItem><a className="text-dark" href="https://www.npmjs.com/package/express-sessions">Express Sessions</a></ListGroupItem>
-                <ListGroupItem><a className="text-dark" href="https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)">CSRF Tokens</a></ListGroupItem>
-                <ListGroupItem><a className="text-dark" href="https://www.owasp.org/index.php/HttpOnly">HTTP Only Cookies</a></ListGroupItem>
-              </ListGroup>
+
+        <Container className="mt-5 mb-5">
+          <h2 className="text-center display-4 mb-4">Featured Events</h2>
+
+          {loading ? (
+            <p className="text-center">Loading events...</p>
+          ) : events.length === 0 ? (
+            <div className="text-center p-5 bg-light rounded">
+              <h4>No events available yet</h4>
+              <p className="text-muted">Check back soon for upcoming sports events!</p>
+            </div>
+          ) : (
+            <Row>
+              {events.map(event => (
+                <Col md="6" lg="4" key={event._id} className="mb-4">
+                  <Card className="h-100">
+                    <CardBody>
+                      <CardTitle tag="h5">
+                        {event.name}
+                        <Badge color="success" className="ml-2">{event.sport}</Badge>
+                      </CardTitle>
+                      <CardText>
+                        <small className="text-muted">
+                          <span className="icon ion-ios-time mr-1"></span>
+                          {this.formatDate(event.startTime)}
+                        </small>
+                      </CardText>
+                      <div className="mt-3">
+                        <div className="d-flex justify-content-between mb-2">
+                          <strong>{event.team1}</strong>
+                          <Badge color="primary">{event.odds1.toFixed(2)}</Badge>
+                        </div>
+                        {event.team2 && (
+                          <div className="d-flex justify-content-between">
+                            <strong>{event.team2}</strong>
+                            <Badge color="primary">{event.odds2.toFixed(2)}</Badge>
+                          </div>
+                        )}
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          )}
+
+          <div className="text-center mt-4">
+            <Button color="success" size="lg" onClick={() => Router.push('/sports')}>
+              View All Events
+            </Button>
+          </div>
+
+          <Row className="mt-5 pt-5">
+            <Col md="4" className="text-center mb-4">
+              <div className="p-4">
+                <span className="icon ion-ios-lock" style={{fontSize: '3em', color: '#28a745'}}></span>
+                <h4 className="mt-3">Secure Payments</h4>
+                <p className="text-muted">All transactions secured by Stripe</p>
+              </div>
             </Col>
-            <Col xs="12" sm="4" className="pt-5">
-              <h3 className="text-center mb-4">Authentication</h3>
-              <ListGroup>
-                <ListGroupItem><a className="text-dark" href="http://www.passportjs.org">Passport</a></ListGroupItem>
-                <ListGroupItem><Link href="/examples/authentication"><a className="text-dark">Email Sign In</a></Link></ListGroupItem>
-                <ListGroupItem><Link href="/examples/authentication"><a className="text-dark">oAuth (Facebook, Google, Twitter…)</a></Link></ListGroupItem>
-                <ListGroupItem><a className="text-dark" href="https://www.npmjs.com/package/next-auth">NextAuth</a></ListGroupItem>
-              </ListGroup>
+            <Col md="4" className="text-center mb-4">
+              <div className="p-4">
+                <span className="icon ion-ios-flash" style={{fontSize: '3em', color: '#28a745'}}></span>
+                <h4 className="mt-3">Instant Deposits</h4>
+                <p className="text-muted">Add funds and start betting immediately</p>
+              </div>
             </Col>
-            <Col xs="12" sm="4" className="pt-5">
-              <h4 className="text-center mb-4">CSS / SCSS</h4>
-              <ListGroup>
-                <ListGroupItem><a className="text-dark" href="https://getbootstrap.com">Bootstrap 4.0</a></ListGroupItem>
-                <ListGroupItem><a className="text-dark" href="http://reactstrap.github.io/">Reactstrap</a></ListGroupItem>
-                <ListGroupItem><a className="text-dark" href="https://ionicframework.com/docs/ionicons/">Ionicons</a></ListGroupItem>
-                <ListGroupItem><a className="text-dark" href="http://sass-lang.com/">SASS</a></ListGroupItem>
-              </ListGroup>
+            <Col md="4" className="text-center mb-4">
+              <div className="p-4">
+                <span className="icon ion-ios-trophy" style={{fontSize: '3em', color: '#28a745'}}></span>
+                <h4 className="mt-3">Big Wins</h4>
+                <p className="text-muted">Competitive odds on all major sports</p>
+              </div>
             </Col>
           </Row>
-          <h2 className="text-center display-4 mt-2 mb-5">Getting Started</h2>
-          <p>
-            <a href="https://github.com/zeit/next.js">Next.js</a> from <a href="https://zeit.co">Zeit</a> makes creating
-            websites with React easy. 
-          </p>
-          <p>
-            This project integrates several concepts to show how you can use them together in a Next.js project.
-          </p>
-          <p>
-            It also serves as template for creating new projects.
-          </p>
-          <pre>
-{`git clone https://github.com/iaincollins/nextjs-starter.git
-npm install
-npm run dev`}
-          </pre>
-          <p>
-            The simplest way to deploy projects to the cloud is with with 'now', which is from Zeit, the creators of Next.js framework.
-          </p>
-            <pre>
-{`npm install -g now
-now`}
-            </pre>
-          <p>
-            For more information on how to build and deploy see <a href="https://github.com/iaincollins/nextjs-starter/blob/master/README.md">README.md</a>
-          </p>
-          <p>
-            For tips on configuring authentication see <a href="https://github.com/iaincollins/nextjs-starter/blob/master/AUTHENTICATION.md">AUTHENTICATION.md</a>
-          </p>
-          <p>
-            The next.js repository has a <a href="https://github.com/zeit/next.js/tree/master/examples">great selection of examples</a> which are an excellent reference.
-          </p>
         </Container>
       </Layout>
     )
