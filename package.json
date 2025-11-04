@@ -28,6 +28,7 @@
     "passport-google-oauth": "^1.0.0",
     "passport-twitter": "^1.0.4",
     "popper.js": "^1.14.6",
+    "prop-types": "^15.6.2",
     "raw-loader": "^0.5.1",
     "react": "^16.7.0",
     "react-bootstrap-table": "^4.3.1",

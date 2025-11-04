@@ -1,5 +1,6 @@
 import React from 'react'
-import Router from 'next/router'
+import PropTypes from 'prop-types'
+import Router, { withRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 import { Container, Row, Col, Nav, NavItem, Button, Form, NavLink, Collapse,
@@ -11,17 +12,16 @@ import Cookies from 'universal-cookie'
 import Package from '../package'
 import Styles from '../css/index.scss'
 
-export default class extends React.Component {
+class Layout extends React.Component {
 
-  static propTypes() {
-    return {
-      session: React.PropTypes.object.isRequired,
-      providers: React.PropTypes.object.isRequired,
-      children: React.PropTypes.object.isRequired,
-      fluid: React.PropTypes.boolean,
-      navmenu: React.PropTypes.boolean,
-      signinBtn: React.PropTypes.boolean
-    }
+  static propTypes = {
+    session: PropTypes.object.isRequired,
+    providers: PropTypes.object.isRequired,
+    children: PropTypes.object.isRequired,
+    fluid: PropTypes.bool,
+    navmenu: PropTypes.bool,
+    signinBtn: PropTypes.bool,
+    router: PropTypes.object.isRequired
   }
   
   constructor(props) {
@@ -92,7 +92,7 @@ export default class extends React.Component {
                 </div>
               </div>
             </Nav>
-            <UserMenu session={this.props.session} toggleModal={this.toggleModal} signinBtn={this.props.signinBtn}/>
+            <UserMenu session={this.props.session} toggleModal={this.toggleModal} signinBtn={this.props.signinBtn} pathname={this.props.router.pathname}/>
           </div>
         </Navbar>
         <MainBody navmenu={this.props.navmenu} fluid={this.props.fluid} container={this.props.container}>
@@ -115,6 +115,8 @@ export default class extends React.Component {
     )
   }
 }
+
+export default withRouter(Layout)
 
 export class MainBody extends React.Component {
   render() {
@@ -219,15 +221,11 @@ export class UserMenu extends React.Component {
       return null
     } else {
       // If not signed in, display sign in button
+      const redirectUrl = this.props.pathname || '/'
       return (
         <Nav className="ml-auto" navbar>
           <NavItem>
-            {/**
-              * @TODO Add support for passing current URL path as redirect URL
-              * so that users without JavaScript are also redirected to the page
-              * they were on before they signed in.
-              **/}
-            <a href="/auth?redirect=/" className="btn btn-outline-primary" onClick={this.props.toggleModal}><span className="icon ion-md-log-in mr-1"></span> Sign up / Sign in</a>
+            <a href={`/auth?redirect=${redirectUrl}`} className="btn btn-outline-primary" onClick={this.props.toggleModal}><span className="icon ion-md-log-in mr-1"></span> Sign up / Sign in</a>
           </NavItem>
         </Nav>
       )
