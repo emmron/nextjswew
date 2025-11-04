@@ -1,0 +1,13 @@
+# InvoiceFlow - Invoice Generator SaaS
+# Allow all search engines to crawl
+
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account/
+
+# Sitemap location (update with your domain)
+Sitemap: https://yourdomain.com/sitemap.xml
