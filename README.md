@@ -101,21 +101,29 @@ npm run dev
 
 ## 🚀 Deployment
 
-### Option 1: Railway (Recommended - Easiest)
+### Quick Comparison
+
+| Platform | Setup Time | Best For | Database |
+|----------|------------|----------|----------|
+| **Vercel** | 15 min | Next.js apps, serverless | External (MongoDB) |
+| **Railway** | 10 min | Beginners, full-stack | Built-in |
+| **Heroku** | 15 min | Traditional apps | Add-ons |
+| **Render** | 15 min | Modern alternative | Built-in |
+
+### Option 1: Vercel (Fastest)
 
 ```bash
-1. Go to https://railway.app
-2. Login with GitHub
-3. Click "New Project" → "Deploy from GitHub repo"
-4. Select: emmron/nextjswew
-5. Select branch: claude/invoice-saas-011CUg84cnJZLmNUSkBaVPvP
-6. Add environment variables (see .env.example)
-7. Deploy!
+1. Go to https://vercel.com
+2. Import repository from GitHub
+3. Add environment variables
+4. Deploy automatically!
+
+Note: Requires MongoDB Atlas for database (free tier)
 ```
 
-**Full guide:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+**Full guide:** [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)
 
-### Option 2: Heroku
+### Option 2: Railway (Easiest)
 
 ```bash
 heroku create your-app-name
@@ -124,7 +132,7 @@ heroku config:set STRIPE_WEBHOOK_SECRET=whsec_...
 git push heroku claude/invoice-saas-011CUg84cnJZLmNUSkBaVPvP:main
 ```
 
-### Option 3: Render
+### Option 4: Render
 
 ```bash
 1. Go to https://render.com
@@ -136,6 +144,7 @@ git push heroku claude/invoice-saas-011CUg84cnJZLmNUSkBaVPvP:main
 ```
 
 **Deployment configs included:**
+- `vercel.json` (Vercel)
 - `Procfile` (Heroku)
 - `railway.json` (Railway)
 - `render.yaml` (Render)
