@@ -55,14 +55,14 @@ export default class extends React.Component {
         <Head>
           <meta charSet="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
-          <title>{this.props.title || 'SportsBet - Bet on Your Favorite Sports'}</title>
+          <title>{this.props.title || 'InvoiceFlow - Professional Invoice Generator'}</title>
           <style dangerouslySetInnerHTML={{__html: Styles}}/>
           <script src="https://cdn.polyfill.io/v2/polyfill.min.js"/>
         </Head>
         <Navbar light className="navbar navbar-expand-md pt-3 pb-3">
           <Link prefetch href="/">
             <NavbarBrand href="/">
-              <span className="icon ion-ios-trophy mr-1"></span> SportsBet
+              <span className="icon ion-ios-document mr-1"></span> InvoiceFlow
             </NavbarBrand>
           </Link>
           <input className="nojs-navbar-check" id="nojs-navbar-check" type="checkbox" aria-label="Menu"/>
@@ -70,18 +70,18 @@ export default class extends React.Component {
           <div className="nojs-navbar">
             <Nav navbar>
               <NavItem>
-                <Link prefetch href="/sports">
-                  <a href="/sports" className="nav-link"><span className="icon ion-ios-football mr-1"></span> Sports</a>
+                <Link prefetch href="/dashboard">
+                  <a href="/dashboard" className="nav-link"><span className="icon ion-ios-speedometer mr-1"></span> Dashboard</a>
                 </Link>
               </NavItem>
               <NavItem>
-                <Link prefetch href="/my-bets">
-                  <a href="/my-bets" className="nav-link"><span className="icon ion-ios-list mr-1"></span> My Bets</a>
+                <Link prefetch href="/create-invoice">
+                  <a href="/create-invoice" className="nav-link"><span className="icon ion-ios-add-circle mr-1"></span> New Invoice</a>
                 </Link>
               </NavItem>
               <NavItem>
-                <Link prefetch href="/wallet">
-                  <a href="/wallet" className="nav-link"><span className="icon ion-ios-wallet mr-1"></span> Wallet</a>
+                <Link prefetch href="/pricing">
+                  <a href="/pricing" className="nav-link"><span className="icon ion-ios-pricetag mr-1"></span> Pricing</a>
                 </Link>
               </NavItem>
             </Nav>

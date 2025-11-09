@@ -1,43 +1,14 @@
 import Link from 'next/link'
 import React from 'react'
 import Router from 'next/router'
-import { Container, Row, Col, Button, Jumbotron, Card, CardBody, CardTitle, CardText, Badge } from 'reactstrap'
+import { Container, Row, Col, Button, Jumbotron, Card, CardBody, ListGroup, ListGroupItem } from 'reactstrap'
 import Page from '../components/page'
 import Layout from '../components/layout'
 
 export default class extends Page {
-  constructor(props) {
-    super(props)
-    this.state = {
-      events: [],
-      loading: true
-    }
-  }
-
-  async componentDidMount() {
-    try {
-      const res = await fetch('/api/events')
-      const data = await res.json()
-      this.setState({
-        events: data.events ? data.events.slice(0, 6) : [],
-        loading: false
-      })
-    } catch (error) {
-      console.error('Error loading events:', error)
-      this.setState({ loading: false })
-    }
-  }
-
-  formatDate(dateString) {
-    const date = new Date(dateString)
-    return date.toLocaleString()
-  }
-
   render() {
-    const { events, loading } = this.state
-
     return (
-      <Layout {...this.props} navmenu={true} container={false}>
+      <Layout {...this.props} navmenu={false} container={false}>
         <Jumbotron className="text-light rounded-0" style={{
           backgroundColor: 'rgba(40,167,69,1)',
           background: 'linear-gradient(135deg, rgba(40,167,69,1) 0%, rgba(25,135,84,1) 100%)',
@@ -45,29 +16,29 @@ export default class extends Page {
           }}>
           <Container className="mt-2 mb-2">
             <h1 className="display-2 mb-3" style={{fontWeight: 600}}>
-              <span className="icon ion-ios-trophy mr-3"></span>
-              SportsBet
+              <span className="icon ion-ios-document mr-3"></span>
+              InvoiceFlow
             </h1>
             <p className="lead mb-4">
-              Bet on your favorite sports. Win big.
+              Create professional invoices in minutes. Free forever.
             </p>
             <p>
               {this.props.session.user ? (
                 <>
-                  <Button color="light" size="lg" className="mr-3" onClick={() => Router.push('/sports')}>
-                    <span className="icon ion-ios-football mr-2"></span> View All Events
+                  <Button color="light" size="lg" className="mr-3" onClick={() => Router.push('/dashboard')}>
+                    <span className="icon ion-ios-speedometer mr-2"></span> Go to Dashboard
                   </Button>
-                  <Button color="outline-light" size="lg" onClick={() => Router.push('/wallet')}>
-                    <span className="icon ion-ios-wallet mr-2"></span> My Wallet
+                  <Button color="outline-light" size="lg" onClick={() => Router.push('/create-invoice')}>
+                    <span className="icon ion-ios-add-circle mr-2"></span> New Invoice
                   </Button>
                 </>
               ) : (
                 <>
                   <Button color="light" size="lg" className="mr-3" onClick={() => Router.push('/auth')}>
-                    <span className="icon ion-ios-log-in mr-2"></span> Sign In
+                    <span className="icon ion-ios-log-in mr-2"></span> Get Started Free
                   </Button>
-                  <Button color="outline-light" size="lg" onClick={() => Router.push('/auth')}>
-                    <span className="icon ion-ios-person-add mr-2"></span> Sign Up
+                  <Button color="outline-light" size="lg" onClick={() => Router.push('/pricing')}>
+                    <span className="icon ion-ios-pricetag mr-2"></span> View Pricing
                   </Button>
                 </>
               )}
@@ -95,76 +66,78 @@ export default class extends Page {
         </Jumbotron>
 
         <Container className="mt-5 mb-5">
-          <h2 className="text-center display-4 mb-4">Featured Events</h2>
+          <h2 className="text-center display-4 mb-4">Why InvoiceFlow?</h2>
 
-          {loading ? (
-            <p className="text-center">Loading events...</p>
-          ) : events.length === 0 ? (
-            <div className="text-center p-5 bg-light rounded">
-              <h4>No events available yet</h4>
-              <p className="text-muted">Check back soon for upcoming sports events!</p>
-            </div>
-          ) : (
+          <Row>
+            <Col md="4" className="mb-4">
+              <Card className="h-100 text-center">
+                <CardBody>
+                  <span className="icon ion-ios-flash" style={{fontSize: '4em', color: '#28a745'}}></span>
+                  <h4 className="mt-3">Lightning Fast</h4>
+                  <p className="text-muted">Create professional invoices in under 2 minutes</p>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="4" className="mb-4">
+              <Card className="h-100 text-center">
+                <CardBody>
+                  <span className="icon ion-ios-cash" style={{fontSize: '4em', color: '#28a745'}}></span>
+                  <h4 className="mt-3">Free Forever</h4>
+                  <p className="text-muted">3 invoices/month free. Upgrade anytime for more.</p>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="4" className="mb-4">
+              <Card className="h-100 text-center">
+                <CardBody>
+                  <span className="icon ion-ios-lock" style={{fontSize: '4em', color: '#28a745'}}></span>
+                  <h4 className="mt-3">Secure & Private</h4>
+                  <p className="text-muted">Your data is encrypted and never shared</p>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+
+          <div className="text-center mt-5 p-5 bg-light rounded">
+            <h2 className="mb-4">Perfect for Freelancers & Small Businesses</h2>
             <Row>
-              {events.map(event => (
-                <Col md="6" lg="4" key={event._id} className="mb-4">
-                  <Card className="h-100">
-                    <CardBody>
-                      <CardTitle tag="h5">
-                        {event.name}
-                        <Badge color="success" className="ml-2">{event.sport}</Badge>
-                      </CardTitle>
-                      <CardText>
-                        <small className="text-muted">
-                          <span className="icon ion-ios-time mr-1"></span>
-                          {this.formatDate(event.startTime)}
-                        </small>
-                      </CardText>
-                      <div className="mt-3">
-                        <div className="d-flex justify-content-between mb-2">
-                          <strong>{event.team1}</strong>
-                          <Badge color="primary">{event.odds1.toFixed(2)}</Badge>
-                        </div>
-                        {event.team2 && (
-                          <div className="d-flex justify-content-between">
-                            <strong>{event.team2}</strong>
-                            <Badge color="primary">{event.odds2.toFixed(2)}</Badge>
-                          </div>
-                        )}
-                      </div>
-                    </CardBody>
-                  </Card>
-                </Col>
-              ))}
+              <Col md="6">
+                <ListGroup flush className="text-left">
+                  <ListGroupItem><span className="icon ion-ios-checkmark-circle text-success mr-2"></span> Create unlimited clients</ListGroupItem>
+                  <ListGroupItem><span className="icon ion-ios-checkmark-circle text-success mr-2"></span> Track payment status</ListGroupItem>
+                  <ListGroupItem><span className="icon ion-ios-checkmark-circle text-success mr-2"></span> Professional templates</ListGroupItem>
+                </ListGroup>
+              </Col>
+              <Col md="6">
+                <ListGroup flush className="text-left">
+                  <ListGroupItem><span className="icon ion-ios-checkmark-circle text-success mr-2"></span> Automatic invoice numbering</ListGroupItem>
+                  <ListGroupItem><span className="icon ion-ios-checkmark-circle text-success mr-2"></span> Custom branding (Pro)</ListGroupItem>
+                  <ListGroupItem><span className="icon ion-ios-checkmark-circle text-success mr-2"></span> Email invoices (Pro)</ListGroupItem>
+                </ListGroup>
+              </Col>
             </Row>
-          )}
-
-          <div className="text-center mt-4">
-            <Button color="success" size="lg" onClick={() => Router.push('/sports')}>
-              View All Events
+            <Button color="success" size="lg" className="mt-4" onClick={() => Router.push('/auth')}>
+              Start Creating Invoices Free
             </Button>
           </div>
 
           <Row className="mt-5 pt-5">
             <Col md="4" className="text-center mb-4">
               <div className="p-4">
-                <span className="icon ion-ios-lock" style={{fontSize: '3em', color: '#28a745'}}></span>
-                <h4 className="mt-3">Secure Payments</h4>
-                <p className="text-muted">All transactions secured by Stripe</p>
+                <h1 className="display-4 text-success">2 min</h1>
+                <p className="text-muted">Average time to create an invoice</p>
               </div>
             </Col>
             <Col md="4" className="text-center mb-4">
               <div className="p-4">
-                <span className="icon ion-ios-flash" style={{fontSize: '3em', color: '#28a745'}}></span>
-                <h4 className="mt-3">Instant Deposits</h4>
-                <p className="text-muted">Add funds and start betting immediately</p>
+                <h1 className="display-4 text-success">$0</h1>
+                <p className="text-muted">Forever free plan available</p>
               </div>
             </Col>
             <Col md="4" className="text-center mb-4">
               <div className="p-4">
-                <span className="icon ion-ios-trophy" style={{fontSize: '3em', color: '#28a745'}}></span>
-                <h4 className="mt-3">Big Wins</h4>
-                <p className="text-muted">Competitive odds on all major sports</p>
+                <h1 className="display-4 text-success">100%</h1>
+                <p className="text-muted">Secure and encrypted</p>
               </div>
             </Col>
           </Row>
